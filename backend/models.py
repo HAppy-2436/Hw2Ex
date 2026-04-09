@@ -62,11 +62,13 @@ class KnowledgeNode(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('knowledge_nodes.id'), nullable=True)
     title = db.Column(db.String(200), nullable=False)
     level = db.Column(db.Integer, default=0)
+    order_index = db.Column(db.Integer, default=0)
     page_start = db.Column(db.Integer)
     page_end = db.Column(db.Integer)
     content = db.Column(db.Text)
     tags = db.Column(JSON)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     parent = db.relationship('KnowledgeNode', remote_side=[id], backref='children')
     homework = db.relationship('Homework', backref='primary_knowledge', lazy=True)
@@ -78,11 +80,13 @@ class KnowledgeNode(db.Model):
             'parent_id': self.parent_id,
             'title': self.title,
             'level': self.level,
+            'order_index': self.order_index,
             'page_start': self.page_start,
             'page_end': self.page_end,
             'content': self.content,
             'tags': self.tags or [],
             'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'child_count': len(self.children)
         }
 
@@ -92,11 +96,12 @@ class Homework(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     book_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=False)
     primary_node_id = db.Column(db.Integer, db.ForeignKey('knowledge_nodes.id'), nullable=True)
-    location = db.Column(db.String(50), nullable=False)
+    title = db.Column(db.String(200))
     content = db.Column(db.Text, nullable=False)
     answer = db.Column(db.Text)
     secondary_nodes = db.Column(JSON)
     status = db.Column(db.String(20), default='new')
+    mastery_level = db.Column(db.Integer, default=0)  # 0-5: 0=陌生, 5=熟悉
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -105,11 +110,12 @@ class Homework(db.Model):
             'id': self.id,
             'book_id': self.book_id,
             'primary_node_id': self.primary_node_id,
-            'location': self.location,
+            'title': self.title,
             'content': self.content,
             'answer': self.answer,
             'secondary_nodes': self.secondary_nodes or [],
             'status': self.status,
+            'mastery_level': self.mastery_level,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
