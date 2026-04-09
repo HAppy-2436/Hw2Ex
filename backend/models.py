@@ -125,14 +125,10 @@ class LearningRecord(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     node_id = db.Column(db.Integer, db.ForeignKey('knowledge_nodes.id'), nullable=False)
-    status = db.Column(db.String(20), default='learning')
-    last_reviewed = db.Column(db.DateTime, default=datetime.utcnow)
-    review_count = db.Column(db.Integer, default=0)
-    correct_count = db.Column(db.Integer, default=0)
-    total_attempts = db.Column(db.Integer, default=0)
-    self_rating = db.Column(db.Integer)
+    duration = db.Column(db.Integer, default=0)  # 学习时长（分钟）
+    notes = db.Column(db.Text)  # 学习笔记
+    self_rating = db.Column(db.Integer)  # 自我评分 1-5
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     knowledge_node = db.relationship('KnowledgeNode', backref='learning_records')
     
@@ -140,14 +136,10 @@ class LearningRecord(db.Model):
         return {
             'id': self.id,
             'node_id': self.node_id,
-            'status': self.status,
-            'last_reviewed': self.last_reviewed.isoformat() if self.last_reviewed else None,
-            'review_count': self.review_count,
-            'correct_count': self.correct_count,
-            'total_attempts': self.total_attempts,
+            'duration': self.duration,
+            'notes': self.notes,
             'self_rating': self.self_rating,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
 class Conversation(db.Model):
@@ -155,17 +147,67 @@ class Conversation(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     node_id = db.Column(db.Integer, db.ForeignKey('knowledge_nodes.id'), nullable=True)
-    key_moments = db.Column(JSON)
-    summary = db.Column(db.Text)
+    conversation_type = db.Column(db.String(50), default='general')  # 对话类型: general, homework_help, concept_explain, etc.
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     knowledge_node = db.relationship('KnowledgeNode', backref='conversations')
+    messages = db.relationship('Message', backref='conversation', lazy=True, cascade='all, delete-orphan')
     
     def to_dict(self):
         return {
             'id': self.id,
             'node_id': self.node_id,
-            'key_moments': self.key_moments or [],
-            'summary': self.summary,
+            'conversation_type': self.conversation_type,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id'), nullable=False)
+    role = db.Column(db.String(20), nullable=False)  # user, assistant, system
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'conversation_id': self.conversation_id,
+            'role': self.role,
+            'content': self.content,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class TokenUsage(db.Model):
+    """Token使用记录表 - 用于API成本控制"""
+    __tablename__ = 'token_usage'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.String(10), nullable=False)  # YYYY-MM-DD
+    hour = db.Column(db.Integer, nullable=False)     # 0-23
+    model = db.Column(db.String(50), nullable=False)
+    prompt_tokens = db.Column(db.Integer, default=0)
+    completion_tokens = db.Column(db.Integer, default=0)
+    total_tokens = db.Column(db.Integer, default=0)
+    cost_usd = db.Column(db.Float, default=0)
+    request_count = db.Column(db.Integer, default=1)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'date': self.date,
+            'hour': self.hour,
+            'model': self.model,
+            'prompt_tokens': self.prompt_tokens,
+            'completion_tokens': self.completion_tokens,
+            'total_tokens': self.total_tokens,
+            'cost_usd': self.cost_usd,
+            'request_count': self.request_count,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }

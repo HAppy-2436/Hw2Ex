@@ -17,7 +17,7 @@ app.config['UPLOAD_FOLDER'] = '/home/i/Hw2Ex/data/uploads'
 
 db.init_app(app)
 
-from routes import subjects, books, knowledge_nodes, homework, learning, ai
+from routes import subjects, books, knowledge_nodes, homework, learning, ai, learning_records, conversations, messages
 
 app.register_blueprint(subjects.bp)
 app.register_blueprint(books.bp)
@@ -25,6 +25,9 @@ app.register_blueprint(knowledge_nodes.bp)
 app.register_blueprint(homework.bp)
 app.register_blueprint(learning.bp)
 app.register_blueprint(ai.bp)
+app.register_blueprint(learning_records.bp)
+app.register_blueprint(conversations.bp)
+app.register_blueprint(messages.bp)
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -92,6 +95,18 @@ def api_docs():
                 'GET /api/learning/nodes/<id>/status': 'Get node learning status',
                 'GET /api/learning/review-plan': 'Get review plan',
                 'GET /api/learning/stats': 'Get learning statistics'
+            },
+            'ai': {
+                'POST /api/ai/analyze': 'Analyze homework with cognitive gate (requires user_thought ≥ 20 chars)',
+                'POST /api/ai/answer': 'Get answer with cognitive gate (requires user_thought ≥ 20 chars)',
+                'POST /api/ai/ask': 'Knowledge Q&A based on node_id',
+                'POST /api/ai/knowledge-summary/<node_id>': 'Generate knowledge summary',
+                'POST /api/ai/homework-answer/<homework_id>': 'Generate homework answer (legacy)',
+                'POST /api/ai/review-materials': 'Generate review materials',
+                'POST /api/ai/conversation': 'Continue AI conversation',
+                'GET /api/ai/cache/stats': 'Get cache statistics',
+                'POST /api/ai/cache/clear': 'Clear AI cache',
+                'GET /api/ai/token-usage': 'Get token usage statistics'
             }
         }
     })
