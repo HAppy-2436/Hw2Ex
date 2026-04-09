@@ -6,6 +6,18 @@ const routes = [
     redirect: '/subjects'
   },
   {
+    path: '/dashboard',
+    name: 'LearningDashboard',
+    component: () => import('@/views/LearningDashboard.vue'),
+    meta: { title: '学习仪表盘' }
+  },
+  {
+    path: '/token-usage',
+    name: 'TokenUsage',
+    component: () => import('@/views/TokenUsage.vue'),
+    meta: { title: 'Token使用统计' }
+  },
+  {
     path: '/subjects',
     name: 'SubjectList',
     component: () => import('@/views/SubjectList.vue'),
@@ -34,6 +46,31 @@ const routes = [
     name: 'HomeworkDetail',
     component: () => import('@/views/HomeworkDetail.vue'),
     meta: { title: '作业详情' }
+  },
+  // ============ 复习模式路由 ============
+  {
+    path: '/review/plans',
+    name: 'ReviewPlan',
+    component: () => import('@/views/ReviewPlan.vue'),
+    meta: { title: '复习计划' }
+  },
+  {
+    path: '/review/:id/checkpoints',
+    name: 'ReviewCheckpoints',
+    component: () => import('@/views/ReviewCheckpoints.vue'),
+    meta: { title: '知识点清单' }
+  },
+  {
+    path: '/review/:id/suggestions',
+    name: 'ReviewSuggestions',
+    component: () => import('@/views/ReviewSuggestions.vue'),
+    meta: { title: '复习建议' }
+  },
+  {
+    path: '/review/:id/chat',
+    name: 'AIChat',
+    component: () => import('@/views/AIChat.vue'),
+    meta: { title: 'AI问答' }
   }
 ]
 

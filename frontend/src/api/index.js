@@ -77,19 +77,77 @@ export const aiApi = {
     user_solution: data.user_solution
   }),
   // 获取AI答案
-  getAnswer: (homeworkId) => api.get(`/ai/answer/${homeworkId}`)
+  getAnswer: (homeworkId) => api.get(`/ai/answer/${homeworkId}`),
+  // AI聊天（带上下文）
+  chat: (context, data) => api.post('/ai/chat', {
+    context,
+    message: data.message
+  }),
+  // 获取Token使用统计
+  getTokenUsage: (params) => api.get('/ai/token-usage', { params })
 }
 
 // ============ 学习记录 API ============
 export const learnApi = {
-  // 记录学习进度
-  recordProgress: (data) => api.post('/learn/progress', data),
   // 获取学习记录
-  getRecords: (params) => api.get('/learn/records', { params })
+  getRecords: (params) => api.get('/learning/records', { params }),
+  // 创建学习记录
+  createRecord: (data) => api.post('/learning/records', data),
+  // 获取学习记录详情
+  getRecordDetail: (id) => api.get(`/learning/records/${id}`),
+  // 更新学习记录
+  updateRecord: (id, data) => api.put(`/learning/records/${id}`, data),
+  // 删除学习记录
+  deleteRecord: (id) => api.delete(`/learning/records/${id}`),
+  
+  // 获取知识点学习状态
+  getNodeStatus: (nodeId) => api.get(`/learning/nodes/${nodeId}/status`),
+  
+  // 获取学习统计
+  getStats: () => api.get('/learning/stats'),
+  
+  // 获取复习计划
+  getReviewPlan: (days) => api.get('/learning/review-plan', { params: { days } })
 }
 
-// ============ 复习 API ============
+// ============ 学习时长统计 API ============
+export const learningStatsApi = {
+  // 获取本周学习时长（按天统计）
+  getWeeklyStats: () => api.get('/learning/weekly-stats'),
+  // 获取知识点掌握度分布
+  getMasteryDistribution: () => api.get('/learning/mastery-distribution'),
+  // 获取学习进度趋势
+  getProgressTrend: (days) => api.get('/learning/progress-trend', { params: { days } })
+}
+
+// ============ 复习计划 API ============
 export const reviewApi = {
+  // 获取复习计划列表
+  getPlans: (params) => api.get('/review/plans', { params }),
+  // 获取复习计划详情
+  getPlanDetail: (id) => api.get(`/review/plans/${id}`),
+  // 创建复习计划
+  createPlan: (data) => api.post('/review/plans', data),
+  // 更新复习计划
+  updatePlan: (id, data) => api.put(`/review/plans/${id}`, data),
+  // 删除复习计划
+  deletePlan: (id) => api.delete(`/review/plans/${id}`),
+  
+  // ============ 复习知识点清单 API ============
+  // 获取复习计划包含的知识点清单
+  getCheckpoints: (planId) => api.get(`/review/plans/${planId}/checkpoints`),
+  // 创建复习知识点
+  createCheckpoint: (planId, data) => api.post(`/review/plans/${planId}/checkpoints`, data),
+  // 更新复习知识点
+  updateCheckpoint: (checkpointId, data) => api.put(`/review/checkpoints/${checkpointId}`, data),
+  // 删除复习知识点
+  deleteCheckpoint: (checkpointId) => api.delete(`/review/checkpoints/${checkpointId}`),
+  
+  // ============ 复习建议 API ============
+  // 获取基于遗忘曲线的复习建议
+  getSuggestions: (planId) => api.get(`/review/plans/${planId}/suggestions`),
+  
+  // ============ 遗留的旧API（兼容） ============
   // 获取复习计划
   getPlan: () => api.get('/review/plan'),
   // 记录复习
