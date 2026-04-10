@@ -183,6 +183,61 @@ class Message(db.Model):
         }
 
 
+class ReviewPlan(db.Model):
+    """复习计划表"""
+    __tablename__ = 'review_plans'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    subject_id = db.Column(db.Integer, db.ForeignKey('subjects.id'), nullable=False)
+    exam_date = db.Column(db.Date, nullable=False)  # 考试日期
+    scope = db.Column(db.Text)  # 考试范围描述
+    status = db.Column(db.String(20), default='planning')  # planning/in_progress/completed
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    subject = db.relationship('Subject', backref='review_plans')
+    checkpoints = db.relationship('ReviewCheckpoint', backref='plan', lazy=True, cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'subject_id': self.subject_id,
+            'exam_date': self.exam_date.isoformat() if self.exam_date else None,
+            'scope': self.scope,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'checkpoint_count': len(self.checkpoints)
+        }
+
+
+class ReviewCheckpoint(db.Model):
+    """复习知识点勾选表"""
+    __tablename__ = 'review_checkpoints'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    plan_id = db.Column(db.Integer, db.ForeignKey('review_plans.id'), nullable=False)
+    knowledge_point_id = db.Column(db.Integer, db.ForeignKey('knowledge_nodes.id'), nullable=False)
+    learning_status = db.Column(db.String(20), default='not_started')  # not_started/learning/mastered
+    mastery_level = db.Column(db.Integer, default=0)  # 0-5
+    notes = db.Column(db.Text)  # 复习笔记
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    knowledge_point = db.relationship('KnowledgeNode', backref='review_checkpoints')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'plan_id': self.plan_id,
+            'knowledge_point_id': self.knowledge_point_id,
+            'learning_status': self.learning_status,
+            'mastery_level': self.mastery_level,
+            'notes': self.notes,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'knowledge_point': self.knowledge_point.to_dict() if self.knowledge_point else None
+        }
+
+
 class TokenUsage(db.Model):
     """Token使用记录表 - 用于API成本控制"""
     __tablename__ = 'token_usage'
@@ -210,4 +265,73 @@ class TokenUsage(db.Model):
             'cost_usd': self.cost_usd,
             'request_count': self.request_count,
             'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class UserProfile(db.Model):
+    """用户画像表 - 存储用户学习信息和偏好"""
+    __tablename__ = 'user_profiles'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    grade = db.Column(db.String(50))           # 年级，如"大一"
+    major = db.Column(db.String(200))         # 专业
+    enrollment_year = db.Column(db.Integer)   # 入学年份
+    learning_background = db.Column(JSON)     # 先验知识描述
+    subject_preferences = db.Column(JSON)     # 学科偏好
+    learning_habits = db.Column(JSON)         # 学习习惯
+    persistent_weak_points = db.Column(JSON) # 持续跟踪的薄弱点
+    current_learning_session = db.Column(JSON) # 当前学习上下文
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'grade': self.grade,
+            'major': self.major,
+            'enrollment_year': self.enrollment_year,
+            'learning_background': self.learning_background or {},
+            'subject_preferences': self.subject_preferences or {},
+            'learning_habits': self.learning_habits or {},
+            'persistent_weak_points': self.persistent_weak_points or [],
+            'current_learning_session': self.current_learning_session or {},
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
+class ConversationContext(db.Model):
+    """对话上下文表 - 管理AI对话的学习上下文"""
+    __tablename__ = 'conversation_contexts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=True)   # 用户ID（可选，兼容访客）
+    session_id = db.Column(db.String(100), nullable=False)  # 对话会话ID
+    conversation_type = db.Column(db.String(50), default='learning')  # learning/homework/review
+    scope_type = db.Column(db.String(50))            # node/chapter/subject
+    scope_id = db.Column(db.Integer)                 # 关联的知识点/章节/学科ID
+    context_summary = db.Column(JSON)                # 上下文摘要
+    understanding_check_passed = db.Column(db.Boolean, default=False)  # AI是否验证了用户理解
+    explanation_depth_level = db.Column(db.Integer, default=1)  # 讲解深度级别 1-3
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=False)  # 过期时间
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'session_id': self.session_id,
+            'conversation_type': self.conversation_type,
+            'scope_type': self.scope_type,
+            'scope_id': self.scope_id,
+            'context_summary': self.context_summary or {},
+            'understanding_check_passed': self.understanding_check_passed,
+            'explanation_depth_level': self.explanation_depth_level,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'expires_at': self.expires_at.isoformat() if self.expires_at else None,
+            'is_expired': datetime.utcnow() > self.expires_at if self.expires_at else False
         }

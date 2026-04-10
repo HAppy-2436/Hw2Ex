@@ -17,7 +17,7 @@ app.config['UPLOAD_FOLDER'] = '/home/i/Hw2Ex/data/uploads'
 
 db.init_app(app)
 
-from routes import subjects, books, knowledge_nodes, homework, learning, ai, learning_records, conversations, messages
+from routes import subjects, books, knowledge_nodes, homework, learning, ai, learning_records, conversations, messages, user_profiles, conversation_contexts, review_plans, review_checkpoints, review, sync, reports, analytics
 
 app.register_blueprint(subjects.bp)
 app.register_blueprint(books.bp)
@@ -28,6 +28,14 @@ app.register_blueprint(ai.bp)
 app.register_blueprint(learning_records.bp)
 app.register_blueprint(conversations.bp)
 app.register_blueprint(messages.bp)
+app.register_blueprint(user_profiles.bp)
+app.register_blueprint(conversation_contexts.bp)
+app.register_blueprint(review_plans.bp)
+app.register_blueprint(review_checkpoints.bp)
+app.register_blueprint(review.bp)
+app.register_blueprint(sync.bp)
+app.register_blueprint(reports.bp)
+app.register_blueprint(analytics.bp)
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -106,7 +114,37 @@ def api_docs():
                 'POST /api/ai/conversation': 'Continue AI conversation',
                 'GET /api/ai/cache/stats': 'Get cache statistics',
                 'POST /api/ai/cache/clear': 'Clear AI cache',
-                'GET /api/ai/token-usage': 'Get token usage statistics'
+                'GET /api/ai/token-usage': 'Get token usage statistics',
+                'GET /api/ai/contexts': 'Get conversation contexts list',
+                'GET /api/ai/contexts/<id>': 'Get context detail',
+                'POST /api/ai/contexts': 'Create new context (new session)',
+                'PUT /api/ai/contexts/<id>': 'Update context (after AI response)',
+                'DELETE /api/ai/contexts/<id>': 'Delete expired context',
+                'POST /api/ai/contexts/cleanup': 'Force cleanup expired contexts',
+                'GET /api/ai/contexts/session/<session_id>': 'Get context by session_id'
+            },
+            'user': {
+                'GET /api/user/profile': 'Get user profile',
+                'PUT /api/user/profile': 'Update user profile',
+                'PATCH /api/user/profile/weak-points': 'Update weak points',
+                'PATCH /api/user/profile/session': 'Update current learning session'
+            },
+            'review': {
+                'GET /api/review/suggestions': 'Get review suggestions based on forgetting curve',
+                'POST /api/review/plan/generate': 'Generate review plan',
+                'GET /api/review/plan/<id>/effectiveness': 'Evaluate review plan effectiveness',
+                'GET /api/review/stats': 'Get review statistics',
+                'GET /api/review/intervals/<mastery_level>': 'Get recommended intervals by mastery level'
+            },
+            'sync': {
+                'GET /api/sync/export': 'Export all data as JSON (?include_backups=true)',
+                'GET /api/sync/export/partial': 'Partial export (?type=subjects&ids=1,2,3)',
+                'POST /api/sync/import': 'Import data (?mode=overwrite|skip)',
+                'POST /api/sync/import/validate': 'Validate import file and preview',
+                'POST /api/sync/backup': 'Create manual backup',
+                'GET /api/sync/backups': 'List all backups',
+                'GET /api/sync/backups/<filename>': 'Download backup file',
+                'POST /api/sync/restore/<filename>': 'Restore from backup'
             }
         }
     })

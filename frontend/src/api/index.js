@@ -156,4 +156,22 @@ export const reviewApi = {
   getStats: () => api.get('/review/stats')
 }
 
+// ============ 分析统计 API ============
+export const analyticsApi = {
+  // 获取学习效率趋势
+  getEfficiencyTrend: (params) => api.get('/analytics/efficiency-trend', { params }),
+  // 获取知识点掌握度
+  getMasteryRadar: () => api.get('/analytics/mastery-radar'),
+  // 获取复习进度
+  getReviewGantt: () => api.get('/analytics/review-gantt')
+}
+
+// ============ 报告 API ============
+export const reportsApi = {
+  // 获取复习报告
+  getReviewReport: (planId) => api.get(`/reports/review/${planId}`),
+  // 获取学习报告
+  getLearningReport: (params) => api.get('/reports/learning', { params })
+}
+
 export default api

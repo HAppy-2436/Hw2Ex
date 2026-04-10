@@ -71,6 +71,13 @@ const routes = [
     name: 'AIChat',
     component: () => import('@/views/AIChat.vue'),
     meta: { title: 'AI问答' }
+  },
+  // ============ 学习模式路由 ============
+  {
+    path: '/study',
+    name: 'StudyMode',
+    component: () => import('@/views/StudyMode.vue'),
+    meta: { title: '学习模式' }
   }
 ]
 
